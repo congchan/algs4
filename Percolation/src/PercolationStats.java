@@ -6,9 +6,11 @@ public class PercolationStats {
     private static final double CONFIDENCE_95 = 1.96;
     private int trials;
     private double[] ps;
+    private double mean;
+    private double stddev;
 
     public PercolationStats(int n, int trials) {
-        if(n < 1 | trials < 1) {
+        if (n < 1 || trials < 1) {
             throw new IllegalArgumentException();
         }
         this.trials = trials;
@@ -26,28 +28,29 @@ public class PercolationStats {
             // The fraction of sites that are opened
             ps[i] = (double) perc.numberOfOpenSites() / (n * n);
         }
-
+        mean =  StdStats.mean(ps);
+        stddev = StdStats.stddev(ps);
 
     }
 
     /** sample mean of percolation threshold.   */
     public double mean()  {
-        return StdStats.mean(ps);
+        return mean;
     }
 
     /** sample standard deviation of percolation threshold.  */
     public double stddev() {
-        return StdStats.stddev(ps);
+        return stddev;
     }
 
     /** low  endpoint of 95% confidence interval.  */
     public double confidenceLo() {
-        return mean() - CONFIDENCE_95 * stddev() / Math.sqrt(trials);
+        return mean - CONFIDENCE_95 * stddev / Math.sqrt(trials);
     }
 
     /** high endpoint of 95% confidence interval. */
     public double confidenceHi() {
-        return mean() + CONFIDENCE_95 * stddev() / Math.sqrt(trials);
+        return mean + CONFIDENCE_95 * stddev / Math.sqrt(trials);
     }
 
     public static void main(String[] args) {   // test client
