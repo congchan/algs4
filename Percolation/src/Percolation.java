@@ -11,108 +11,127 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
  *   the top row and that process fills some open site on the bottom row.
  **/
 public class Percolation {
+    private static final byte BLOCKED = 0;
+    private static final byte OPEN = 1;
+    private static final byte CONNECT_TO_TOP = 4;
+    private static final byte CONNECT_TO_BOTTOM = 2;
     private int n;
-    private int num;
-    private boolean[][] grid;
+    private int openSitesNum;
+    private byte[] siteStates;
     private WeightedQuickUnionUF wqu;
-    private int top;
-    private int bottom;
+    private boolean isPercolates;
 
     /**
      * create n-by-n grid, with all sites blocked
-     * since the specification requires index from 1 - n,
-     * we have to create a [n+1]x[n+1] grid
      * @param n
      */
     public Percolation(int n) {
-        if(n < 1) {
+        if (n < 1) {
             throw new IllegalArgumentException();
         }
-
+        isPercolates = false;
         this.n = n;
-        num = 0;
-        grid = new boolean[n + 1][n + 1];
+        openSitesNum = 0;
+        siteStates = new byte[n * n];
+        wqu = new WeightedQuickUnionUF(n * n);
 
-        // The last two elements stand for the virtual top and down site
-        wqu = new WeightedQuickUnionUF(n * n + 2);
-        top = n * n;
-        bottom = n * n + 1;
-
-        for (int i = 0; i <= n; i++) {
-            for (int j = 0; j <= n; j++) {
-                grid[i][j] = false;
-            }
+        for (int i = 0; i < n * n; i++) {
+            siteStates[i] = BLOCKED;
         }
-
     }
 
     /** open site (row, col) if it is not open already. */
     public void open(int row, int col) {
-        if(row < 1 || row > n || col < 1 || col > n) {
+        if (row < 1 || row > n || col < 1 || col > n) {
             throw new IllegalArgumentException();
         }
-        if (!grid[row][col]) {
-            grid[row][col] = true;
-            num += 1;
-            unionNeighbours(row, col);
-        }
-    }
-
-    private void unionNeighbours(int row, int col) {
-        // union any open neighbour
         int p = translate(row, col);
+        if (siteStates[p] == BLOCKED) {
+            siteStates[p] = OPEN;
+            openSitesNum += 1;
 
-        if (row == 1) {
-            wqu.union(p, top);
-            union(Math.min(row + 1, n), col, p); // down
-        } else if (row == n) {
-            wqu.union(p, bottom);
-            union(Math.max(row - 1, 1), col, p); // up
-        } else {
-            union(row - 1, col, p); // up
-            union(row + 1, col, p); // down
-        }
+            if (n == 1) {
+                siteStates[p] = (CONNECT_TO_BOTTOM | CONNECT_TO_TOP);
+                isPercolates = true;
+                return;
+            }
 
-        union(row, Math.max(col - 1, 1), p); // left
-        union(row, Math.min(col + 1, n), p); // right
-    }
-
-    private void union(int row, int col, int p) {
-        // if site[row][col] is open, union with p
-        if (isOpen(row, col)) {
-            wqu.union(translate(row, col), p);
+            int newParent = unionNeighbours(row, col);
+            if (siteStates[newParent] >= (CONNECT_TO_TOP | CONNECT_TO_BOTTOM)) {
+                isPercolates = true;
+            }
         }
     }
 
+    /** Union any open neighbour. */
+    private int unionNeighbours(int row, int col) {
+        int cur = translate(row, col);
+        int parent = wqu.find(cur);
+        int up = translate(Math.max(row - 1, 1), col); // up
+        int down = translate(Math.min(row + 1, n), col); // down
+        int left = translate(row, Math.max(col - 1, 1)); // left
+        int right = translate(row, Math.min(col + 1, n)); // right
+
+        if (row == 1) { // top row
+            siteStates[parent] = (byte) (siteStates[parent] | CONNECT_TO_TOP);
+        } else if (row == n) { // bottom row
+            siteStates[parent] = (byte) (siteStates[parent] | CONNECT_TO_BOTTOM);
+        }
+
+
+        byte upState = union(up, cur, parent);
+        byte downState = union(down, cur, parent);
+        byte leftState = union(left, cur, parent);
+        byte rightState = union(right, cur, parent);
+        int newParent = wqu.find(cur);
+        siteStates[newParent] = (byte) (siteStates[parent] | siteStates[newParent] | upState | downState | leftState | rightState);
+        return newParent;
+    }
+
+    /** if site[row][col] is open, update its parent */
+    private byte union(int neighbour, int cur, int parent) {
+        if (neighbour != cur && siteStates[neighbour] != BLOCKED) {
+            int neighbourParent = wqu.find(neighbour);
+            wqu.union(neighbour, cur);
+            return siteStates[neighbourParent];
+        }
+        return siteStates[parent];
+    }
+
+
+    /** convert (row, col) to array index. */
     private int translate(int row, int col) {
-        // return the corresponds unionFind index
         return (row - 1) * n + (col - 1);
     }
 
+    /** is site (row, col) open? */
     public boolean isOpen(int row, int col) {
-        if(row < 1 || row > n || col < 1 || col > n) {
+        if (row < 1 || row > n || col < 1 || col > n) {
             throw new IllegalArgumentException();
         }
-        // is site (row, col) open?
-        return grid[row][col];
+        return siteStates[translate(row, col)] != BLOCKED;
     }
 
+    /** is site (row, col) full? Determined by its root's state*/
     public boolean isFull(int row, int col) {
-        // is site (row, col) full?
-        if(row < 1 || row > n || col < 1 || col > n) {
+        if (row < 1 || row > n || col < 1 || col > n) {
             throw new IllegalArgumentException();
         }
-        return wqu.connected(translate(row, col), top);
+        int cur = translate(row, col);
+        if (siteStates[cur] != BLOCKED) {
+            return siteStates[wqu.find(cur)] >= CONNECT_TO_TOP;
+        }
+        return false;
     }
 
     public int numberOfOpenSites() {
         // number of open sites
-        return num;
+        return openSitesNum;
     }
 
+    /** does the system percolate?. */
     public boolean percolates() {
-        // does the system percolate?
-        return wqu.connected(top, bottom);
+        return isPercolates;
     }
 
     public static void main(String[] args) {   // test client (optional)
