@@ -32,9 +32,8 @@ import java.util.Arrays;
 public class FastCollinearPoints {
     private static final int N = 4;
     private final ArrayList<LineSegment> ls = new ArrayList<>();
-    private final ArrayList<Point[]> pqSegment = new ArrayList<>();
-    private Point[] buffer;
-    private Point[] newPoints;
+    private Point[] sortedBySlopePoints;
+    private Point[] sortedPoints;
 
     /**
      * finds all line segments containing 4 or more points
@@ -46,19 +45,25 @@ public class FastCollinearPoints {
     public FastCollinearPoints(Point[] points) {
 
         if (isInvalid(points)) { throw new java.lang.IllegalArgumentException(); }
+        if (points.length < 4) { return; }
 
-        for (Point p : newPoints) {
+        for (Point p : sortedPoints) {
             // copy it for each p, to keep the original natural order
-            System.arraycopy(newPoints, 0, buffer, 0, newPoints.length);
-            Arrays.sort(buffer, p.slopeOrder()); // the first one is p itself
+            sortedBySlopePoints = sortedPoints.clone();
+            Arrays.sort(sortedBySlopePoints, p.slopeOrder()); // the first one is p itself
             int k = 2; // any two point could form a line
             int begin = 1;
             int end = 1;
-            for (int i = 1; i < buffer.length - 1; i++) {
-                if (Double.compare(p.slopeTo(buffer[i]), p.slopeTo(buffer[i + 1]))  == 0) {
+            double slopeA;
+            double slopeB = p.slopeTo(sortedBySlopePoints[1]);
+            for (int i = 1; i < sortedBySlopePoints.length - 1; i++) {
+                slopeA = slopeB;
+                slopeB = p.slopeTo(sortedBySlopePoints[i + 1]);
+
+                if (Double.compare(slopeA, slopeB)  == 0) {
                     k++;
                     end = i + 1;
-                    if (i + 1 < buffer.length - 1) { continue; }
+                    if (i + 1 < sortedBySlopePoints.length - 1) { continue; }
                 }
 
                 if (k >= N) { // a valid collinear
@@ -74,20 +79,16 @@ public class FastCollinearPoints {
 
     /**
      * check if new found collinear points already exist in the LineSegment
+     *      1. Since the every possible segment is created by points it contains,
+     *      2. and we iterate through the sortedPoints to find segment
+     *      3. so every non-duplicate new segment is created from its smallest point member
+     *      4. any duplicate segment is created later by its other member other than the smallest
      *      if not, add in
      * @param start, end
      */
     private void addSegments(Point cur, int start, int end) {
-        Point smaller = buffer[start];
-        Point bigger = buffer[end];
-        if (cur.compareTo(bigger) > 0) { bigger = cur;
-        } else if (cur.compareTo(smaller) < 0) { smaller = cur; }
-
-        for (Point[] i : pqSegment) {
-            if (i[0] == smaller && i[1] == bigger) { return; }
-        }
-        pqSegment.add(new Point[] {smaller, bigger});
-        ls.add(new LineSegment(smaller, bigger));
+        if (cur.compareTo(sortedBySlopePoints[start]) > 0) { return; }
+        ls.add(new LineSegment(cur, sortedBySlopePoints[end]));
     }
 
 
@@ -104,13 +105,13 @@ public class FastCollinearPoints {
         for (int i = 0; i < points.length; i++) {
             if (points[i] == null) { return true; }
         }
-        newPoints = new Point[points.length];
-        System.arraycopy(points, 0, newPoints, 0, points.length);
-        Arrays.sort(newPoints); // Sorts the specified array of objects into ascending order
-        for (int i = 0; i < newPoints.length - 1; i++) {
-            if (newPoints[i].compareTo(newPoints[i + 1]) == 0) { return true; }
+        sortedPoints = new Point[points.length];
+        sortedPoints = points.clone();
+        Arrays.sort(sortedPoints); // Sorts the specified array of objects into ascending order
+        for (int i = 0; i < sortedPoints.length - 1; i++) {
+            if (sortedPoints[i].compareTo(sortedPoints[i + 1]) == 0) { return true; }
         }
-        buffer = new Point[points.length];
+        sortedBySlopePoints = new Point[points.length];
         return false;
     }
 
@@ -119,7 +120,7 @@ public class FastCollinearPoints {
      * @return
      */
     public int numberOfSegments() {
-        return pqSegment.size();
+        return ls.size();
     }
 
 
