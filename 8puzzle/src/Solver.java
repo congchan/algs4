@@ -15,7 +15,6 @@ import java.util.ArrayDeque;
  * The constructor should throw a java.lang.IllegalArgumentException if passed a null argument.
  */
 public class Solver {
-    private MinPQ<Searchnode> ques;
     private int moves = -1;
     private Searchnode init;
     private Searchnode goal;
@@ -29,7 +28,7 @@ public class Solver {
      */
     public Solver(Board initial) {
         if (initial == null) { throw new IllegalArgumentException(); }
-        ques = new MinPQ<>();
+        MinPQ<Searchnode> ques = new MinPQ<>();
         MinPQ<Searchnode> quesModified = new MinPQ<>();
         init = new Searchnode(initial, 0, null);
         ques.insert(init);
