@@ -217,11 +217,10 @@ public class KdTree {
      * corresponding to a node, there is no need to explore that node (or its subtrees).
      * That is, search a node only if it might contain a point that is closer than the best one found so far.
      * The effectiveness of the pruning rule depends on quickly finding a nearby point.
-     *      To do this, organize the recursive method so that when there are two possible subtrees to go down,
-     *      you always choose the subtree that is on the same side of the splitting line as the query point as the first
-     *      subtree to explore
-     *          - the closest point found while exploring the first subtree may enable pruning of the second subtree.
-     * */
+     *      The algorithm moves down the tree recursively, with priority as insert method
+     *      (i.e. it chose the order of going left or right depending on whether the point is lesser than the current
+     *      node in the split dimension).
+     */
     public Point2D nearest(Point2D p) {
         if (p == null) { throw new IllegalArgumentException(); }
         nearestPoint = null;
@@ -239,13 +238,15 @@ public class KdTree {
                 nearestPoint = node.p;
             }
 
-            if (node.lb != null && node.lb.rect.distanceSquaredTo(p) == 0) {
+            double cmp = compare(p, node.p, node.ori);
+            if (cmp < 0) {
                 nearest(node.lb, p);
                 nearest(node.rt, p);
             } else {
                 nearest(node.rt, p);
                 nearest(node.lb, p);
             }
+
         }
     }
 
