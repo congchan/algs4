@@ -4,7 +4,7 @@
  * and prints exactly k of them, uniformly at random. 
  * Print each item from the sequence at most once.
  * Assume that 0 < k < n, where n is the number of string on standard input.
- * Using Knuth shuffling algorithms, 
+ * Using Reservoir Sampling, 
  * only one RandomizedQueue object of maximum size at most k is used.
  * @author  Cong Chen
  */
@@ -25,6 +25,15 @@ public class Permutation {
                 n++;
                 String in = StdIn.readString();
 
+                /** Reservoir Sampling
+                * 1. Keep the first k items in memory.
+    			  2. When the i-th item arrives (for $i>k$):
+    			     * with probability $k/i$, keep the new item 
+    			     and discard an old one, 
+    			     selecting which to replace at random, 
+    			     each with chance $1/k$.
+        			 * with probability $1-k/i$, ignore the new one
+                */
                 if (n > k && StdRandom.uniform(n) < k)  {
                     rq.dequeue();
                 } else if (n > k) { continue; }
