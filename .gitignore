@@ -311,3 +311,6 @@ proj3/target
 
 # Project 1B things
 # words
+
+*.zip
+8puzzle/src/puzzle04_test.txt
