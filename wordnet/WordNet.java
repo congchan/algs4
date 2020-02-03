@@ -135,6 +135,16 @@ public class WordNet {
 
     // do unit testing of this class
     public static void main(String[] args) {
-        WordNet wordnet = new WordNet(args[0], args[1]);
+//        WordNet wordnet = new WordNet(args[0], args[1]);
+        WordNet wordnet = new WordNet("synsets6.txt", "hypernyms6InvalidTwoRoots.txt");
+        for (String s : wordnet.nouns()) {
+            StdOut.printf("%s\n", s);
+        }
+        boolean is = wordnet.isNoun("a");
+        boolean not = wordnet.isNoun("h");
+
+        int distance = wordnet.distance("a", "c");
+        String ancestor = wordnet.sap("a", "c");
+        StdOut.printf("length = %d, ancestor = %s\n", distance, ancestor);
     }
 }
