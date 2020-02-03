@@ -92,10 +92,12 @@ public class SAP {
         int minDist = INFINITY;
         int ancestor = -1;
         for (int i = 0; i < digraph.V(); i++) {
-            int curDist = vBFS.distTo(i) + wBFS.distTo(i);
-            if (curDist < minDist) {
-                minDist = curDist;
-                ancestor = i;
+            if (vBFS.hasPathTo(i) && wBFS.hasPathTo(i)) {
+                int curDist = vBFS.distTo(i) + wBFS.distTo(i);
+                if (curDist < minDist) {
+                    minDist = curDist;
+                    ancestor = i;
+                }
             }
         }
         res[0] = ancestor;
