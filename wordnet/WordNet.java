@@ -105,6 +105,34 @@ public class WordNet {
         }
         return nRoot == 1;
     }
+
+    // returns all WordNet nouns
+    public Iterable<String> nouns() {
+        Iterable<String> allNouns = nouns.keys(); // O(N)
+        return allNouns;
+    }
+
+    // is the word a WordNet noun?
+    public boolean isNoun(String word) {
+        return nouns.contains(word); // O(1)
+    }
+
+    // distance between nounA and nounB (defined below)
+    public int distance(String nounA, String nounB) {
+        Iterable<Integer> nounAIDs = nouns.get(nounA);
+        Iterable<Integer> nounBIDs = nouns.get(nounB);
+        return sap.length(nounAIDs, nounBIDs);
+    }
+
+    // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
+    // in a shortest ancestral path (defined below)
+    public String sap(String nounA, String nounB) {
+        Iterable<Integer> nounAIDs = nouns.get(nounA);
+        Iterable<Integer> nounBIDs = nouns.get(nounB);
+        int ancestorID = sap.ancestor(nounAIDs, nounBIDs);
+        return synsetsList.get(ancestorID);
+    }
+
     // do unit testing of this class
     public static void main(String[] args) {
         WordNet wordnet = new WordNet(args[0], args[1]);
