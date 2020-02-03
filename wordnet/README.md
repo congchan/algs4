@@ -1,6 +1,9 @@
 ## SAP
 length(int v, int w) query:
-1. BFS(v), 对于所有reachable vertex, 记录到v的距离, 对w做同样操作, O(E + V) time.
-2. 在reachable vertex中, 选择到v和w的距离和最小的vertex. O(V)
+1. BFS(v), we got distance to every reachable vertices, so as w, O(E + V) time.
+2. There are one or more vertice that has the smallest total distance to v and w, pick one as ancestor, the total distance as length, O(V) time.
 
-对于length(Iterable<Integer> v, Iterable<Integer> w): 使用 bfs(Digraph G, Iterable<Integer> sources).
+For length(Iterable<Integer> v, Iterable<Integer> w): use bfs(Digraph G, Iterable<Integer> sources).
+
+## WordNet
+Since a noun could appear in different synsets, and all the methods' parameters are noun, hence we use a map {key: bag} to represent the data(the noun as key, the bag of ids it belong to as values).
