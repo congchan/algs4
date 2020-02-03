@@ -31,17 +31,22 @@
 import edu.princeton.cs.algs4.*;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class WordNet {
     private SeparateChainingHashST<String, Bag<Integer>> nouns;
     private Digraph hypernymsDG;
     private int V;
+    private SAP sap;
+    private ArrayList<String> synsetsList;
 
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
         nouns = new SeparateChainingHashST<String, Bag<Integer>>();
+        synsetsList = new ArrayList<>();
         readSynsets(synsets);
         readHypernyms(hypernyms);
+        sap = new SAP(hypernymsDG);
     }
 
     // read synsets nouns and ids
@@ -53,6 +58,7 @@ public class WordNet {
             String[] parsedLine = line.split("\\,");
             synsetId = Integer.parseInt(parsedLine[0]);
             String synset = parsedLine[1];
+            synsetsList.add(synset);
             String[] parsedSynset = synset.split(" ");
             for (String n : parsedSynset) {
                 if (nouns.contains(n)) {
@@ -71,7 +77,7 @@ public class WordNet {
     private void readHypernyms(String hypernyms) {
         hypernymsDG = new Digraph(V);
         In hypernymsReader = new In(new File(hypernyms));
-        String line = null;
+        String line;
         while ((line = hypernymsReader.readLine()) != null) {
             String[] parsedLine = line.split("\\,");
             int synsetId = 0;
@@ -83,12 +89,22 @@ public class WordNet {
                 }
             }
         }
-        DirectedCycle isDag = new DirectedCycle(hypernymsDG);
-        if (isDag.hasCycle()) {
+        if (!isRootedDAG(hypernymsDG)) {
             throw new IllegalArgumentException();
         }
     }
 
+    // check if a graph is rooted DAG: it is acyclic
+    // and has one vertex—the root—that is an ancestor of every other vertex.
+    private boolean isRootedDAG(Digraph G) {
+        DirectedCycle isDag = new DirectedCycle(hypernymsDG);
+        if (isDag.hasCycle()) return false;
+        int nRoot = 0;
+        for (int i = 0; i < G.V(); i++) {
+            if (G.outdegree(i) == 0) nRoot++;
+        }
+        return nRoot == 1;
+    }
     // do unit testing of this class
     public static void main(String[] args) {
         WordNet wordnet = new WordNet(args[0], args[1]);
