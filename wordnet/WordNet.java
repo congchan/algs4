@@ -28,15 +28,19 @@
  *      For the analysis, assume that the number of nouns per synset is bounded by a constant.
  **************************************************************************** */
 
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.Bag;
+import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.DirectedCycle;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.SeparateChainingHashST;
+import edu.princeton.cs.algs4.StdOut;
 
-import java.io.File;
 import java.util.ArrayList;
 
 public class WordNet {
     private SeparateChainingHashST<String, Bag<Integer>> nouns;
     private Digraph hypernymsDG;
-    private int V;
+    private int numV;
     private SAP sap;
     private ArrayList<String> synsetsList;
 
@@ -51,7 +55,7 @@ public class WordNet {
 
     // read synsets nouns and ids
     private void readSynsets(String synsets) {
-        In synsetsReader = new In(new File(synsets));
+        In synsetsReader = new In(synsets);
         String line;
         int synsetId = 0;
         while ((line = synsetsReader.readLine()) != null) {
@@ -70,13 +74,13 @@ public class WordNet {
                 }
             }
         }
-        V = synsetId + 1;
+        numV = synsetId + 1;
     }
 
     // read hypernyms
     private void readHypernyms(String hypernyms) {
-        hypernymsDG = new Digraph(V);
-        In hypernymsReader = new In(new File(hypernyms));
+        hypernymsDG = new Digraph(numV);
+        In hypernymsReader = new In(hypernyms);
         String line;
         while ((line = hypernymsReader.readLine()) != null) {
             String[] parsedLine = line.split("\\,");
@@ -135,14 +139,10 @@ public class WordNet {
 
     // do unit testing of this class
     public static void main(String[] args) {
-//        WordNet wordnet = new WordNet(args[0], args[1]);
-        WordNet wordnet = new WordNet("synsets6.txt", "hypernyms6InvalidTwoRoots.txt");
+        WordNet wordnet = new WordNet(args[0], args[1]);
         for (String s : wordnet.nouns()) {
             StdOut.printf("%s\n", s);
         }
-        boolean is = wordnet.isNoun("a");
-        boolean not = wordnet.isNoun("h");
-
         int distance = wordnet.distance("a", "c");
         String ancestor = wordnet.sap("a", "c");
         StdOut.printf("length = %d, ancestor = %s\n", distance, ancestor);

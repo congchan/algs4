@@ -22,19 +22,19 @@
  *      proportional to E + V.
  **************************************************************************** */
 
-import edu.princeton.cs.algs4.*;
+import edu.princeton.cs.algs4.BreadthFirstDirectedPaths;
+import edu.princeton.cs.algs4.Digraph;
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdIn;
+import edu.princeton.cs.algs4.StdOut;
 
 public class SAP {
     private static final int INFINITY = Integer.MAX_VALUE;
     private Digraph digraph;
-    // BreadthFirstDirectedPaths[] BFSs;
 
     // constructor takes a digraph (not necessarily a DAG)
     public SAP(Digraph G) {
         digraph = new Digraph(G); // a deep copy of the input digraph.
-        // for (int i = 0; i < digraph.V(); i++) {
-        //     BFSs[i] = null;
-        // }
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
@@ -86,6 +86,10 @@ public class SAP {
 
     // private method length method and ancestor method
     private int[] ancestorAndLength(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null) throw new IllegalArgumentException();
+        for (Integer i : v) if (i == null) throw new IllegalArgumentException();
+        for (Integer i : w) if (i == null) throw new IllegalArgumentException();
+
         int[] res = new int[2];
         BreadthFirstDirectedPaths vBFS = new BreadthFirstDirectedPaths(digraph, v);
         BreadthFirstDirectedPaths wBFS = new BreadthFirstDirectedPaths(digraph, w);
