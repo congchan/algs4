@@ -29,10 +29,15 @@ public class Canvas {
         pixels = new Pixel[height()][width()];
         for (int i = 0; i < height(); i++) {
             for (int j = 0; j < width(); j++) {
-                energies[i][j] = calEnergy(j, i);
                 pixels[i][j] = new Pixel(j, i, picture.getRGB(j, i));
             }
         }
+        for (int i = 0; i < height(); i++) {
+            for (int j = 0; j < width(); j++) {
+                energies[i][j] = calEnergy(j, i);
+            }
+        }
+
         // get topologicalOrder
         TopologicalOrder topologicalOrder = new TopologicalOrder(this);
         topological = topologicalOrder.reversePost();
@@ -53,6 +58,11 @@ public class Canvas {
         isTransposed = !isTransposed;
 
         // update topological order
+        updateTopologicalOrder();
+    }
+
+    // update topological order
+    private void updateTopologicalOrder() {
         TopologicalOrder topologicalOrder = new TopologicalOrder(this);
         topological = topologicalOrder.reversePost();
     }
@@ -64,7 +74,7 @@ public class Canvas {
         for (int i = 0; i < dRow; i++) {
             for (int j = 0; j < dCol; j++) {
                 // quite easy to make mistake
-                tM[j][i] = new Pixel(i, j, m[i][j].getRgb());
+                tM[j][i] = new Pixel(i, j, m[i][j].getRGB());
             }
         }
         return tM;
@@ -139,6 +149,7 @@ public class Canvas {
         shiftPixel(seam);
         updateEnergy(seam);
         width--;
+        updateTopologicalOrder();
     }
 
     private void shiftEnergy(int[] seam) {
@@ -152,8 +163,11 @@ public class Canvas {
     private void shiftPixel(int[] seam) {
         for (int i = 0; i < height(); i++) {
             // shift pixels
-            System.arraycopy(pixels[i], seam[i] + 1, pixels[i], seam[i],
-                             width() - seam[i] - 1);
+            for (int j = seam[i] + 1; j < width(); j++) {
+                pixels[i][j - 1].setRGB(pixels[i][j].getRGB());
+            }
+            // System.arraycopy(pixels[i], seam[i] + 1, pixels[i], seam[i],
+            //                  width() - seam[i] - 1);
         }
     }
 
@@ -163,8 +177,9 @@ public class Canvas {
      */
     public void updateEnergy(int[] seam) {
         for (int i = 0; i < height(); i++) {
-            energies[i][seam[i] - 1] = calEnergy(seam[i] - 1, i);
             energies[i][seam[i]] = calEnergy(seam[i], i);
+            if (seam[i] > 0)
+                energies[i][seam[i] - 1] = calEnergy(seam[i] - 1, i);
             // updateEnergy(seam[i] - 1, i);
             // updateEnergy(seam[i], i);
         }
@@ -210,8 +225,8 @@ public class Canvas {
     }
 
     // get the rgb at column x and row y
-    public int getRgb(int x, int y) {
-        return pixels[y][x].getRgb();
+    public int getRGB(int x, int y) {
+        return pixels[y][x].getRGB();
     }
 
     /**
@@ -274,8 +289,8 @@ public class Canvas {
      * (x + 1, y) and pixel (x − 1, y)
      */
     private double squareGradX(int x, int y) {
-        int rgbL = picture.getRGB(x + 1, y);
-        int rgbR = picture.getRGB(x - 1, y);
+        int rgbL = getRGB(x + 1, y);
+        int rgbR = getRGB(x - 1, y);
         return diffRGB(rgbL, rgbR);
     }
 
@@ -287,8 +302,8 @@ public class Canvas {
      * (x, y + 1) and pixel (x, y − 1)
      */
     private double squareGradY(int x, int y) {
-        int rgbU = picture.getRGB(x, y + 1);
-        int rgbD = picture.getRGB(x, y - 1);
+        int rgbU = getRGB(x, y + 1);
+        int rgbD = getRGB(x, y - 1);
         return diffRGB(rgbU, rgbD);
     }
 

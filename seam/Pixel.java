@@ -16,8 +16,16 @@ public class Pixel {
         this.rgb = rgb;
     }
 
-    public void setRgb(int rgb) {
+    public void setRGB(int rgb) {
         this.rgb = rgb;
+    }
+
+    public void setCol(int col) {
+        this.col = col;
+    }
+
+    public void setRow(int row) {
+        this.row = row;
     }
 
     public int getCol() {
@@ -28,7 +36,7 @@ public class Pixel {
         return row;
     }
 
-    public int getRgb() {
+    public int getRGB() {
         return rgb;
     }
 

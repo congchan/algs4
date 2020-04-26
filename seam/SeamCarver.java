@@ -27,7 +27,7 @@ public class SeamCarver {
         Picture pic = new Picture(width(), height());
         for (int i = 0; i < height(); i++) {
             for (int j = 0; j < width(); j++) {
-                pic.setRGB(j, i, canvas.getRgb(j, i));
+                pic.setRGB(j, i, canvas.getRGB(j, i));
             }
         }
         return pic;
@@ -48,11 +48,13 @@ public class SeamCarver {
     }
 
     /**
-     * get the enerty of pixel at column x and row y
+     * get the energy of pixel at column x and row y
      */
     public double energy(int x, int y) {
         if (canvas.isTransposed()) // transpose back
             canvas.transpose();
+        validateColumnIndex(x);
+        validateRowIndex(y);
         return canvas.getEnergy(x, y);
     }
 
@@ -70,9 +72,9 @@ public class SeamCarver {
     // remove vertical seam from current picture
     public void removeVerticalSeam(int[] seam) {
         if (!canvas.isTransposed())
-            validateSeam(seam, canvas.height());
+            validateSeam(seam, canvas.height(), canvas.width() - 1);
         else
-            validateSeam(seam, canvas.width());
+            validateSeam(seam, canvas.width(), canvas.height() - 1);
 
         if (canvas.isTransposed()) // transpose back
             canvas.transpose();
@@ -93,45 +95,49 @@ public class SeamCarver {
     // remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam) {
         if (!canvas.isTransposed())
-            validateSeam(seam, canvas.width());
+            validateSeam(seam, canvas.width(), canvas.height() - 1);
         else
-            validateSeam(seam, canvas.height());
+            validateSeam(seam, canvas.height(), canvas.width() - 1);
 
         if (!canvas.isTransposed())
             canvas.transpose();
         canvas.removeVerticalSeam(seam);
     }
 
-    private void validateSeam(int[] seam, int validLength) {
-        if (seam == null || seam.length != validLength)
-            throw new IllegalArgumentException();
-        for (int i = 0; i < seam.length - 1; i++) {
-            if (Math.abs(seam[i] - seam[i + 1]) > 1
-                    || seam[i] < 0 || seam[i] >= validLength)
-                throw new IllegalArgumentException();
+    private void validateSeam(int[] seam, int validLength, int validRange) {
+        if (seam == null)
+            throw new IllegalArgumentException("null argument");
+        if (seam.length != validLength)
+            throw new IllegalArgumentException(
+                    "seam length must be " + validLength + ": " + seam.length);
+        for (int i = 0; i < seam.length; i++) {
+            if (seam[i] < 0 || seam[i] > validRange)
+                throw new IllegalArgumentException(
+                        "seam index must be between 0 and " + validRange + ": " + seam[i]);
+            if (i < seam.length - 1 && Math.abs(seam[i] - seam[i + 1]) > 1)
+                throw new IllegalArgumentException(
+                        "seam diff must <= 1 and " + seam[i] + ": " + seam[i + 1]);
         }
     }
 
-    private boolean isValidHorizontalSeam(int[] seam) {
-        if (seam == null || seam.length != canvas.width())
-            throw new IllegalArgumentException();
-        for (int i = 0; i < seam.length - 1; i++) {
-            if (Math.abs(seam[i] - seam[i + 1]) > 1
-                    || seam[i] < 0 || seam[i] >= canvas.width())
-                throw new IllegalArgumentException();
-        }
-        return true;
+    private void validateRowIndex(int row) {
+        if (!isValidRowIndex(row))
+            throw new IllegalArgumentException(
+                    "row index must be between 0 and " + (height() - 1) + ": " + row);
     }
 
-    private boolean isValidVerticalSeam(int[] seam) {
-        if (seam == null || seam.length != canvas.height())
-            throw new IllegalArgumentException();
-        for (int i = 0; i < seam.length - 1; i++) {
-            if (Math.abs(seam[i] - seam[i + 1]) > 1
-                    || seam[i] < 0 || seam[i] >= canvas.height())
-                throw new IllegalArgumentException();
-        }
-        return true;
+    private void validateColumnIndex(int col) {
+        if (!isValidColumnIndex(col))
+            throw new IllegalArgumentException(
+                    "column index must be between 0 and " + (width() - 1) + ": " + col);
+    }
+
+    private boolean isValidRowIndex(int row) {
+        return (row >= 0 && row < height());
+    }
+
+    private boolean isValidColumnIndex(int col) {
+        return (col >= 0 && col < width());
     }
 
     public static void main(String[] args) {
