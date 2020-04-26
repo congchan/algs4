@@ -29,7 +29,7 @@ public class AcyclicSP {
                 distTo[i][j] = Double.POSITIVE_INFINITY;
             }
         }
-        distTo[row][col] = canvas.energy(col, row);
+        distTo[row][col] = canvas.getEnergy(col, row);
 
         // get topologicalOrder
         Iterable<Pixel> topological = canvas.getTopological();
@@ -43,7 +43,7 @@ public class AcyclicSP {
     private void relax(Pixel p) {
         for (Pixel nextP : canvas.adj(p.getCol(), p.getRow())) {
             double candidateDist = distTo[p.getRow()][p.getCol()] +
-                    canvas.energy(nextP.getCol(), nextP.getRow());
+                    canvas.getEnergy(nextP.getCol(), nextP.getRow());
             if (distTo[nextP.getRow()][nextP.getCol()] > candidateDist) {
                 distTo[nextP.getRow()][nextP.getCol()] = candidateDist;
                 pixelTo[nextP.getRow()][nextP.getCol()] = p;

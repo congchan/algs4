@@ -7,10 +7,11 @@
 
 import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.Stack;
 
 public class Canvas {
     // define the energy of a pixel at the border of the image to be 1000
-    static final double BORDERENG = 1000;
+    private static final double BORDERENG = 1000;
     private Picture picture;
     private int height;
     private int width;
@@ -29,7 +30,7 @@ public class Canvas {
         for (int i = 0; i < height(); i++) {
             for (int j = 0; j < width(); j++) {
                 energies[i][j] = calEnergy(j, i);
-                pixels[i][j] = new Pixel(j, i);
+                pixels[i][j] = new Pixel(j, i, picture.getRGB(j, i));
             }
         }
         // get topologicalOrder
@@ -41,12 +42,13 @@ public class Canvas {
      * transpose the Canvas
      */
     public void transpose() {
-        energies = transpose(energies, height, width);
-        pixels = transpose(pixels, height, width);
+        energies = transpose(energies);
+        pixels = transpose(pixels);
+        // picture = transpose(picture);
 
         // update dimension
-        int tmp = height;
-        height = width;
+        int tmp = height();
+        height = width();
         width = tmp;
         isTransposed = !isTransposed;
 
@@ -55,29 +57,77 @@ public class Canvas {
         topological = topologicalOrder.reversePost();
     }
 
-    private Pixel[][] transpose(Pixel[][] m, int dx, int dy) {
-        assert dx == m.length;
-        assert dy == m[0].length;
-        Pixel[][] tM = new Pixel[dy][dx];
-        for (int i = 0; i < dx; i++) {
-            for (int j = 0; j < dy; j++) {
-                tM[j][i] = new Pixel(i, j);
+    private Pixel[][] transpose(Pixel[][] m) {
+        int dRow = m.length;
+        int dCol = m[0].length;
+        Pixel[][] tM = new Pixel[dCol][dRow];
+        for (int i = 0; i < dRow; i++) {
+            for (int j = 0; j < dCol; j++) {
+                // quite easy to make mistake
+                tM[j][i] = new Pixel(i, j, m[i][j].getRgb());
             }
         }
         return tM;
     }
 
-    private double[][] transpose(double[][] m, int dx, int dy) {
-        assert dx == m.length;
-        assert dy == m[0].length;
-        double[][] tM = new double[dy][dx];
-        for (int i = 0; i < dx; i++) {
-            for (int j = 0; j < dy; j++) {
+    private double[][] transpose(double[][] m) {
+        int dRow = m.length;
+        int dCol = m[0].length;
+        double[][] tM = new double[dCol][dRow];
+        for (int i = 0; i < dRow; i++) {
+            for (int j = 0; j < dCol; j++) {
                 tM[j][i] = m[i][j];
             }
         }
         return tM;
     }
+
+    public boolean isTransposed() {
+        return isTransposed;
+    }
+
+    /**
+     * Find sequence of indices for vertical seam, which means
+     * find a vertical seam of minimum total energy.
+     * 1. The weights are on the vertices instead of the edges.
+     * 2. the shortest path from any of the W pixels in the top row to
+     * any of the W pixels in the bottom row.
+     * 3. DAG, where there is a downward edge from pixel (x, y) to
+     * pixels (x − 1, y + 1), (x, y + 1), and (x + 1, y + 1),
+     * assuming that the coordinates are in the prescribed range.
+     * <p>
+     * Execute the topological sort algorithm directly on the pixels;
+     * Relax vertices in topological order
+     * <p>
+     * Returns:
+     * an array of length H such that entry y is the column number of
+     * the pixel to be removed from row y of the image.
+     * Example:  { 3, 4, 3, 2, 2 } represent minimum energy vertical seam
+     * are (3, 0), (4, 1), (3, 2), (2, 3), and (2, 4).
+     */
+    public int[] findVerticalSeam() {
+        double minEng = Double.POSITIVE_INFINITY;
+        Iterable<Pixel> path = new Stack<Pixel>();
+        int[] returnPath = new int[height()];
+        int beginRow = 0;
+        int endRow = height() - 1;
+        for (int beginCol = 1; beginCol < width() - 1; beginCol++) {
+            AcyclicSP asp = new AcyclicSP(this, beginCol, beginRow);
+            for (int endCol = 1; endCol < width() - 1; endCol++) {
+                double candEng = asp.distTo(endCol, endRow);
+                if (candEng < minEng) {
+                    minEng = candEng;
+                    path = asp.pathTo(endCol, endRow);
+                }
+            }
+        }
+        int row = 0;
+        for (Pixel p : path) {
+            returnPath[row++] = p.getCol();
+        }
+        return returnPath;
+    }
+
 
     /**
      * remove vertical seam, including
@@ -85,49 +135,48 @@ public class Canvas {
      * and replace picture with new pic without the seam
      */
     public void removeVerticalSeam(int[] seam) {
-        // double[][] newEngs = new double[height()][width() - 1];
-        // Pixel[][] newPixels = new Pixel[height()][width() - 1];
-        Picture newPic = new Picture(width() - 1, height());
+        shiftEnergy(seam);
+        shiftPixel(seam);
+        updateEnergy(seam);
+        width--;
+    }
+
+    private void shiftEnergy(int[] seam) {
         for (int i = 0; i < height(); i++) {
             // shift energy
-            // System.arraycopy(energies[i], 0, newEngs[i], 0, seam[i]);
             System.arraycopy(energies[i], seam[i] + 1, energies[i], seam[i],
                              width() - seam[i] - 1);
+        }
+    }
 
+    private void shiftPixel(int[] seam) {
+        for (int i = 0; i < height(); i++) {
             // shift pixels
-            // System.arraycopy(pixels[i], 0, newPixels[i], 0, seam[i]);
             System.arraycopy(pixels[i], seam[i] + 1, pixels[i], seam[i],
                              width() - seam[i] - 1);
-
-            // remove the actual picture seam
-            for (int j = 0; j < seam[i]; j++) {
-                newPic.setRGB(j, i, picture.getRGB(j, i));
-            }
-            for (int j = seam[i] + 1; j < width(); j++) {
-                newPic.setRGB(j - 1, i, picture.getRGB(j, i));
-            }
         }
-        picture = newPic;
-        width--;
-
-        updateVerticalEnergy(seam);
     }
+
 
     /**
-     * update the energy after the vertical seam has been removed.
+     * update the energy after the seam has been removed.
      */
-    public void updateVerticalEnergy(int[] seam) {
+    public void updateEnergy(int[] seam) {
         for (int i = 0; i < height(); i++) {
-            updateEnergy(seam[i] - 1, i);
-            updateEnergy(seam[i], i);
+            energies[i][seam[i] - 1] = calEnergy(seam[i] - 1, i);
+            energies[i][seam[i]] = calEnergy(seam[i], i);
+            // updateEnergy(seam[i] - 1, i);
+            // updateEnergy(seam[i], i);
         }
     }
 
-    public void removeHorizontalSeam(int[] seam) {
-        transpose();
-        removeVerticalSeam(seam);
-        transpose();
-    }
+    // /**
+    //  * update the energy at column x and row y
+    //  */
+    // private void updateEnergy(int x, int y) {
+    //     energies[y][x] = calEnergy(x, y);
+    // }
+
 
     // width of current canvas
     public int width() {
@@ -144,18 +193,8 @@ public class Canvas {
         return picture;
     }
 
-    // width of current picture
-    public int picWidth() {
-        return picture.width();
-    }
-
-    // height of current picture
-    public int picHeight() {
-        return picture.height();
-    }
-
     // energy of pixel at column x and row y
-    public double energy(int x, int y) {
+    public double getEnergy(int x, int y) {
         return energies[y][x];
     }
 
@@ -167,85 +206,12 @@ public class Canvas {
      * @return Pixel
      */
     public Pixel getPixel(int x, int y) {
-        // if (isTransposed) {
-        //     return pixel(y, x);
-        // }
-        return pixel(x, y);
-    }
-
-    private Pixel pixel(int x, int y) {
         return pixels[y][x];
     }
 
-
-    /**
-     * get the vertical adjacent pixels of pixel at column x and row y
-     * which are pixels (x − 1, y + 1), (x, y + 1), and (x + 1, y + 1)
-     * Special cases: consider the border pixels energy is fixed,
-     * relatve adj have only one pixel, which is the one exact below, (x, y + 1)
-     *
-     * @param x column x
-     * @param y row y
-     * @return Iterable<Pixel>
-     */
-    public Iterable<Pixel> verticalAdj(int x, int y) {
-        validateColumnIndex(x);
-        validateRowIndex(y);
-        Queue<Pixel> adjPixels = new Queue<Pixel>();
-        if (isValidRowIndex(y + 1)) {
-            if (isBorder(x, y) || isBorder(x, y + 1)) {
-                // special cases
-                adjPixels.enqueue(pixels[y + 1][x]);
-            }
-            else {
-                for (int i = x - 1; i <= x + 1; i++) {
-                    if (isValidColumnIndex(i))
-                        adjPixels.enqueue(pixels[y + 1][i]);
-                }
-            }
-        }
-        return adjPixels;
-    }
-
-
-    /**
-     * get the horizontal adjacent pixels of pixel at column x and row y
-     * which are pixels (x + 1, y - 1), (x + 1, y), and (x + 1, y + 1)
-     * Special cases: consider the border pixels energy is fixed,
-     * relatve adj have only one pixel, which is the one exact below, (x, y + 1)
-     *
-     * @param x column x
-     * @param y row y
-     * @return Iterable<Pixel>
-     */
-    public Iterable<Pixel> horizontalAdj(int x, int y) {
-        validateColumnIndex(x);
-        validateRowIndex(y);
-        Queue<Pixel> adjPixels = new Queue<Pixel>();
-        if (isValidRowIndex(x + 1)) {
-            if (isBorder(x, y) || isBorder(x + 1, y)) {
-                // special cases
-                adjPixels.enqueue(pixels[y][x + 1]);
-            }
-            else {
-                for (int j = y - 1; j <= y + 1; j++) {
-                    if (isValidRowIndex(j))
-                        adjPixels.enqueue(pixels[j][x + 1]);
-                }
-            }
-        }
-        return adjPixels;
-    }
-
-
-    /**
-     * The actual adj pixels depends on whether the it is transposed or not.
-     */
-    public Iterable<Pixel> adj(int col, int row) {
-        // if (isTransposed) {
-        //     return adjacent(row, col);
-        // }
-        return adjacent(col, row);
+    // get the rgb at column x and row y
+    public int getRgb(int x, int y) {
+        return pixels[y][x].getRgb();
     }
 
     /**
@@ -258,7 +224,7 @@ public class Canvas {
      * @param y row y
      * @return Iterable<Pixel>
      */
-    private Iterable<Pixel> adjacent(int x, int y) {
+    public Iterable<Pixel> adj(int x, int y) {
         validateColumnIndex(x);
         validateRowIndex(y);
         Queue<Pixel> adjPixels = new Queue<Pixel>();
@@ -269,7 +235,7 @@ public class Canvas {
             }
             else {
                 for (int i = x - 1; i <= x + 1; i++) {
-                    if (isValidColumnIndex(i))
+                    if (isValidColumnIndex(i) && !isBorder(i, y + 1))
                         adjPixels.enqueue(pixels[y + 1][i]);
                 }
             }
@@ -284,13 +250,6 @@ public class Canvas {
      */
     public Iterable<Pixel> getTopological() {
         return topological;
-    }
-
-    /**
-     * update the energy at column x and row y
-     */
-    private void updateEnergy(int x, int y) {
-        energies[y][x] = calEnergy(x, y);
     }
 
 
@@ -337,7 +296,7 @@ public class Canvas {
         double diffRed = getRed(thisRGB) - getRed(thatRGB);
         double diffGreen = getGreen(thisRGB) - getGreen(thatRGB);
         double diffBlue = getBlue(thisRGB) - getBlue(thatRGB);
-        return diffRed * diffRed + diffGreen * diffGreen + diffBlue * diffBlue;
+        return Math.pow(diffRed, 2) + Math.pow(diffGreen, 2) + Math.pow(diffBlue, 2);
     }
 
     private int getRed(int rgb) {

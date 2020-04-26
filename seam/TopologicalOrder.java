@@ -9,21 +9,21 @@ import edu.princeton.cs.algs4.Stack;
 
 public class TopologicalOrder {
     private boolean[][] marked;       // marked[v] = has v been marked in dfs?
-    private int[][] pre;                 // pre[v]    = preorder  number of v
+    // private int[][] pre;                 // pre[v]    = preorder  number of v
     private int[][] post;                // post[v]   = postorder number of v
-    private Queue<Pixel> preorder;   // vertices in preorder
+    // private Queue<Pixel> preorder;   // vertices in preorder
     private Queue<Pixel> postorder;  // vertices in postorder
-    private int preCounter;            // counter for preorder numbering
+    // private int preCounter;            // counter for preorder numbering
     private int postCounter;           // counter for postorder numbering
 
     public TopologicalOrder(Canvas canvas) {
         if (canvas == null) throw new IllegalArgumentException();
         int height = canvas.height();
         int width = canvas.width();
-        pre = new int[height][width];
+        // pre = new int[height][width];
         post = new int[height][width];
         postorder = new Queue<Pixel>();
-        preorder = new Queue<Pixel>();
+        // preorder = new Queue<Pixel>();
         marked = new boolean[height][width];
         // run dfs from top row
         int row = 0;
@@ -42,9 +42,9 @@ public class TopologicalOrder {
      */
     private void dfs(Canvas canvas, int x, int y) {
         marked[y][x] = true;
-        pre[y][x] = preCounter++;
+        // pre[y][x] = preCounter++;
         Pixel pixel = canvas.getPixel(x, y);
-        preorder.enqueue(pixel);
+        // preorder.enqueue(pixel);
         for (Pixel p : canvas.adj(x, y)) {
             if (!marked[p.getRow()][p.getCol()]) {
                 dfs(canvas, p.getCol(), p.getRow());
@@ -66,15 +66,15 @@ public class TopologicalOrder {
         return reverse;
     }
 
-    /**
-     * Returns the preorder number of vertex {@code v}.
-     *
-     * @return the preorder number of vertex {@code v}
-     * @throws IllegalArgumentException unless {@code 0 <= v < V}
-     */
-    public int pre(int i, int j) {
-        return pre[i][j];
-    }
+    // /**
+    //  * Returns the preorder number of vertex {@code v}.
+    //  *
+    //  * @return the preorder number of vertex {@code v}
+    //  * @throws IllegalArgumentException unless {@code 0 <= v < V}
+    //  */
+    // public int pre(int i, int j) {
+    //     return pre[i][j];
+    // }
 
     /**
      * Returns the postorder number of vertex {@code v}.
