@@ -17,8 +17,7 @@ public class Canvas {
     private boolean isTransposed;
     private double[][] energies;
     private int[][] rgbs;
-    private Pixel[][] pixels;
-    private Iterable<Pixel> topological;
+    // private Iterable<Pixel> topological;
 
     public Canvas(Picture picture) {
         height = picture.height();
@@ -26,12 +25,9 @@ public class Canvas {
         isTransposed = false;
         energies = new double[height()][width()];
         rgbs = new int[height()][width()];
-        pixels = new Pixel[height()][width()];
         for (int i = 0; i < height(); i++) {
             for (int j = 0; j < width(); j++) {
                 rgbs[i][j] = picture.getRGB(j, i);
-                // pixels[i][j] = new Pixel(j, i, picture.getRGB(j, i));
-                pixels[i][j] = new Pixel(j, i);
             }
         }
         for (int i = 0; i < height(); i++) {
@@ -40,9 +36,9 @@ public class Canvas {
             }
         }
 
-        // get topologicalOrder
-        TopologicalOrder topologicalOrder = new TopologicalOrder(this);
-        topological = topologicalOrder.reversePost();
+        // // get topologicalOrder
+        // TopologicalOrder topologicalOrder = new TopologicalOrder(this);
+        // topological = topologicalOrder.reversePost();
     }
 
     /**
@@ -50,9 +46,7 @@ public class Canvas {
      */
     public void transpose() {
         energies = transpose(energies);
-        pixels = transpose(pixels);
         rgbs = transpose(rgbs);
-        // picture = transpose(picture);
 
         // update dimension
         int tmp = height();
@@ -60,29 +54,15 @@ public class Canvas {
         width = tmp;
         isTransposed = !isTransposed;
 
-        // update topological order
-        updateTopologicalOrder();
+        // // update topological order
+        // updateTopologicalOrder();
     }
 
-    // update topological order
-    private void updateTopologicalOrder() {
-        TopologicalOrder topologicalOrder = new TopologicalOrder(this);
-        topological = topologicalOrder.reversePost();
-    }
-
-    private Pixel[][] transpose(Pixel[][] m) {
-        int dRow = m.length;
-        int dCol = m[0].length;
-        Pixel[][] tM = new Pixel[dCol][dRow];
-        for (int i = 0; i < dRow; i++) {
-            for (int j = 0; j < dCol; j++) {
-                // quite easy to make mistake
-                // tM[j][i] = new Pixel(i, j, m[i][j].getRGB());
-                tM[j][i] = new Pixel(i, j);
-            }
-        }
-        return tM;
-    }
+    // // update topological order
+    // private void updateTopologicalOrder() {
+    //     TopologicalOrder topologicalOrder = new TopologicalOrder(this);
+    //     topological = topologicalOrder.reversePost();
+    // }
 
     private double[][] transpose(double[][] m) {
         int dRow = m.length;
@@ -137,13 +117,16 @@ public class Canvas {
         int[] returnPath = new int[height()];
         int beginRow = 0;
         int endRow = height() - 1;
+        TopologicalOrder tp = new TopologicalOrder(this);
+        // AcyclicSP asp;
         for (int beginCol = 1; beginCol < width() - 1; beginCol++) {
-            AcyclicSP asp = new AcyclicSP(this, beginCol, beginRow);
+            tp.buildSingleSourceSP(beginCol, beginRow);
+            // AcyclicSP asp = new AcyclicSP(this, beginCol, beginRow);
             for (int endCol = 1; endCol < width() - 1; endCol++) {
-                double candEng = asp.distTo(endCol, endRow);
+                double candEng = tp.distTo(endCol, endRow);
                 if (candEng < minEng) {
                     minEng = candEng;
-                    path = asp.pathTo(endCol, endRow);
+                    path = tp.pathTo(endCol, endRow);
                 }
             }
         }
@@ -157,18 +140,17 @@ public class Canvas {
 
     /**
      * remove vertical seam, including
-     * shift left energy matrix, pixels matrix,
+     * shift left energy matrix matrix,
      * and replace picture with new pic without the seam
      */
     public void removeVerticalSeam(int[] seam) {
         shiftEnergy(seam);
         shiftRGB(seam);
-        // shiftPixel(seam);
 
         width--; // must before update energy as it determines the border
         if (width > 0) {
             updateEnergy(seam);
-            updateTopologicalOrder();
+            // updateTopologicalOrder();
         }
     }
 
@@ -188,18 +170,6 @@ public class Canvas {
         }
     }
 
-    // private void shiftPixel(int[] seam) {
-    //     for (int i = 0; i < height(); i++) {
-    //         // shift pixels
-    //         for (int j = seam[i] + 1; j < width(); j++) {
-    //             pixels[i][j - 1].setRGB(pixels[i][j].getRGB());
-    //         }
-    //         // System.arraycopy(pixels[i], seam[i] + 1, pixels[i], seam[i],
-    //         //                  width() - seam[i] - 1);
-    //     }
-    // }
-
-
     /**
      * update the energy after the seam has been removed.
      */
@@ -213,13 +183,6 @@ public class Canvas {
             // updateEnergy(seam[i], i);
         }
     }
-
-    // /**
-    //  * update the energy at column x and row y
-    //  */
-    // private void updateEnergy(int x, int y) {
-    //     energies[y][x] = calEnergy(x, y);
-    // }
 
 
     // width of current canvas
@@ -237,20 +200,9 @@ public class Canvas {
         return energies[y][x];
     }
 
-    /**
-     * get the pixel at column x and row y
-     *
-     * @param x column x
-     * @param y row y
-     * @return Pixel
-     */
-    public Pixel getPixel(int x, int y) {
-        return pixels[y][x];
-    }
 
     // get the rgb at column x and row y
     public int getRGB(int x, int y) {
-        // return pixels[y][x].getRGB();
         return rgbs[y][x];
     }
 
@@ -271,27 +223,27 @@ public class Canvas {
         if (isValidRowIndex(y + 1)) {
             if (isBorder(x, y) || isBorder(x, y + 1)) {
                 // special cases
-                adjPixels.enqueue(pixels[y + 1][x]);
+                adjPixels.enqueue(new Pixel(x, y + 1));
             }
             else {
                 for (int i = x - 1; i <= x + 1; i++) {
                     if (isValidColumnIndex(i) && !isBorder(i, y + 1))
-                        adjPixels.enqueue(pixels[y + 1][i]);
+                        adjPixels.enqueue(new Pixel(i, y + 1));
                 }
             }
         }
         return adjPixels;
     }
 
-    /**
-     * get topological order
-     *
-     * @return topological
-     */
-    public Iterable<Pixel> getTopological() {
-        return topological;
-    }
-
+    // /**
+    //  * get topological order
+    //  *
+    //  * @return topological
+    //  */
+    // public Iterable<Pixel> getTopological() {
+    //     return topological;
+    // }
+    //
 
     /**
      * energy of pixel at column x and row y
