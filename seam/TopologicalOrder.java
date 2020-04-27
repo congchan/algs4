@@ -35,10 +35,6 @@ public class TopologicalOrder {
         marked = new boolean[height][width];
         // run dfs from top row (which are considered as one pixel)
         dfs(0, 0);
-        // int row = 0;
-        // for (int col = 0; col < canvas.width(); col++)
-        //     if (!marked[row][col]) dfs(col, row);
-
     }
 
 
@@ -106,7 +102,6 @@ public class TopologicalOrder {
                         canvas.getEnergy(nextP.getCol(), nextP.getRow());
                 if (distTo[nextP.getRow()][nextP.getCol()] > candidateDist) {
                     distTo[nextP.getRow()][nextP.getCol()] = candidateDist;
-                    // pixelTo[nextP.getRow()][nextP.getCol()] = p;
                     colTo[nextP.getRow()][nextP.getCol()] = p.getCol();
                 }
             }

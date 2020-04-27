@@ -35,9 +35,6 @@ public class Canvas {
             }
         }
 
-        // // get topologicalOrder
-        // TopologicalOrder topologicalOrder = new TopologicalOrder(this);
-        // topological = topologicalOrder.reversePost();
     }
 
     /**
@@ -53,15 +50,7 @@ public class Canvas {
         width = tmp;
         isTransposed = !isTransposed;
 
-        // // update topological order
-        // updateTopologicalOrder();
     }
-
-    // // update topological order
-    // private void updateTopologicalOrder() {
-    //     TopologicalOrder topologicalOrder = new TopologicalOrder(this);
-    //     topological = topologicalOrder.reversePost();
-    // }
 
     private double[][] transpose(double[][] m) {
         int dRow = m.length;
@@ -111,8 +100,6 @@ public class Canvas {
      * are (3, 0), (4, 1), (3, 2), (2, 3), and (2, 4).
      */
     public int[] findVerticalSeam() {
-        // double minEng = Double.POSITIVE_INFINITY;
-        // Iterable<Integer> path = new Stack<Integer>();
         int[] returnPath = new int[height()];
         int beginCol = 0;
         int beginRow = 0;
@@ -120,19 +107,7 @@ public class Canvas {
         int endRow = height() - 1;
         TopologicalOrder tp = new TopologicalOrder(this);
         tp.buildSingleSourceSP(beginCol, beginRow);
-        // double minEng = tp.distTo(0, endRow);
         Iterable<Integer> path = tp.pathTo(endCol, endRow);
-        // for (int beginCol = 1; beginCol < width() - 1; beginCol++) {
-        //     tp.buildSingleSourceSP(beginCol, beginRow);
-        //     // AcyclicSP asp = new AcyclicSP(this, beginCol, beginRow);
-        //     for (int endCol = 1; endCol < width() - 1; endCol++) {
-        //         double candEng = tp.distTo(endCol, endRow);
-        //         if (candEng < minEng) {
-        //             minEng = candEng;
-        //             path = tp.pathTo(endCol, endRow);
-        //         }
-        //     }
-        // }
         int row = 0;
         for (int col : path) {
             returnPath[row++] = col;
@@ -158,7 +133,6 @@ public class Canvas {
         width--; // must before update energy as it determines the border
         if (width > 0) {
             updateEnergy(seam);
-            // updateTopologicalOrder();
         }
     }
 
@@ -187,8 +161,6 @@ public class Canvas {
                 energies[i][seam[i]] = calEnergy(seam[i], i);
             if (seam[i] > 0)
                 energies[i][seam[i] - 1] = calEnergy(seam[i] - 1, i);
-            // updateEnergy(seam[i] - 1, i);
-            // updateEnergy(seam[i], i);
         }
     }
 
@@ -256,16 +228,6 @@ public class Canvas {
         }
         return adjPixels;
     }
-
-    // /**
-    //  * get topological order
-    //  *
-    //  * @return topological
-    //  */
-    // public Iterable<Pixel> getTopological() {
-    //     return topological;
-    // }
-    //
 
     /**
      * energy of pixel at column x and row y
