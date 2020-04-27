@@ -22,12 +22,13 @@ public class SeamCarver {
 
     // current picture, construct a picture from pixels for mutation defend
     public Picture picture() {
-        if (canvas.isTransposed()) // transpose back
-            canvas.transpose();
         Picture pic = new Picture(width(), height());
         for (int i = 0; i < height(); i++) {
             for (int j = 0; j < width(); j++) {
-                pic.setRGB(j, i, canvas.getRGB(j, i));
+                if (canvas.isTransposed())
+                    pic.setRGB(j, i, canvas.getRGB(i, j));
+                else
+                    pic.setRGB(j, i, canvas.getRGB(j, i));
             }
         }
         return pic;
@@ -36,26 +37,35 @@ public class SeamCarver {
     // width of current picture
     public int width() {
         if (canvas.isTransposed()) // transpose back
-            canvas.transpose();
-        return canvas.width();
+            return canvas.height();
+        else
+            return canvas.width();
     }
 
     // height of current picture
     public int height() {
         if (canvas.isTransposed()) // transpose back
-            canvas.transpose();
-        return canvas.height();
+            return canvas.width();
+        else
+            return canvas.height();
     }
 
     /**
      * get the energy of pixel at column x and row y
      */
     public double energy(int x, int y) {
-        if (canvas.isTransposed()) // transpose back
-            canvas.transpose();
         validateColumnIndex(x);
         validateRowIndex(y);
-        return canvas.getEnergy(x, y);
+        if (canvas.isTransposed()) { // transpose back
+            return canvas.getEnergy(y, x);
+        }
+        else {
+            return canvas.getEnergy(x, y);
+        }
+        //     canvas.transpose();
+        // validateColumnIndex(x);
+        // validateRowIndex(y);
+        // return canvas.getEnergy(x, y);
     }
 
 

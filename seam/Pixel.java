@@ -8,17 +8,17 @@ public class Pixel {
 
     private int col;
     private int row;
-    private int rgb;
+    // private int rgb;
 
-    public Pixel(int col, int row, int rgb) {
+    public Pixel(int col, int row) {
         this.row = row;
         this.col = col;
-        this.rgb = rgb;
+        // this.rgb = rgb;
     }
 
-    public void setRGB(int rgb) {
-        this.rgb = rgb;
-    }
+    // public void setRGB(int rgb) {
+    //     this.rgb = rgb;
+    // }
 
     public void setCol(int col) {
         this.col = col;
@@ -36,9 +36,9 @@ public class Pixel {
         return row;
     }
 
-    public int getRGB() {
-        return rgb;
-    }
+    // public int getRGB() {
+    //     return rgb;
+    // }
 
     public static void main(String[] args) {
 

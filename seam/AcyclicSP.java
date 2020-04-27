@@ -10,7 +10,7 @@
 import edu.princeton.cs.algs4.Stack;
 
 public class AcyclicSP {
-    private Canvas canvas;
+    // private Canvas canvas;
     private double[][] distTo; // distTo[row][col] = distance of shortest s->p path
     private Pixel[][] pixelTo; // pixelTo[row][col] = last pixel on shortest s->p path
 
@@ -21,7 +21,7 @@ public class AcyclicSP {
      * @param canvas the weighted pixel canvas
      */
     public AcyclicSP(Canvas canvas, int col, int row) {
-        this.canvas = canvas;
+        // this.canvas = canvas;
         distTo = new double[canvas.height()][canvas.width()];
         pixelTo = new Pixel[canvas.height()][canvas.width()];
         for (int i = 0; i < canvas.height(); i++) {
@@ -35,12 +35,12 @@ public class AcyclicSP {
         Iterable<Pixel> topological = canvas.getTopological();
         // relax vertices in topological order
         for (Pixel p : topological) {
-            relax(p);
+            relax(canvas, p);
         }
     }
 
     // relax pixel p
-    private void relax(Pixel p) {
+    private void relax(Canvas canvas, Pixel p) {
         for (Pixel nextP : canvas.adj(p.getCol(), p.getRow())) {
             double candidateDist = distTo[p.getRow()][p.getCol()] +
                     canvas.getEnergy(nextP.getCol(), nextP.getRow());
@@ -79,14 +79,15 @@ public class AcyclicSP {
      * as an iterable of edges, and {@code null} if no such path
      * @throws IllegalArgumentException unless {@code 0 <= v < V}
      */
-    public Iterable<Pixel> pathTo(int col, int row) {
+    public Iterable<Integer> pathTo(int col, int row) {
         if (!hasPathTo(col, row)) return null;
-        Stack<Pixel> path = new Stack<Pixel>();
-        path.push(canvas.getPixel(col, row));
+        Stack<Integer> path = new Stack<Integer>();
+        // path.push(canvas.getPixel(col, row));
+        path.push(col);
         for (Pixel lastP = pixelTo[row][col];
              lastP != null;
              lastP = pixelTo[lastP.getRow()][lastP.getCol()]) {
-            path.push(lastP);
+            path.push(lastP.getCol());
         }
         return path;
     }

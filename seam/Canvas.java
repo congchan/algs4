@@ -12,24 +12,26 @@ import edu.princeton.cs.algs4.Stack;
 public class Canvas {
     // define the energy of a pixel at the border of the image to be 1000
     private static final double BORDERENG = 1000;
-    private Picture picture;
     private int height;
     private int width;
     private boolean isTransposed;
     private double[][] energies;
+    private int[][] rgbs;
     private Pixel[][] pixels;
     private Iterable<Pixel> topological;
 
     public Canvas(Picture picture) {
-        this.picture = new Picture(picture);
         height = picture.height();
         width = picture.width();
         isTransposed = false;
         energies = new double[height()][width()];
+        rgbs = new int[height()][width()];
         pixels = new Pixel[height()][width()];
         for (int i = 0; i < height(); i++) {
             for (int j = 0; j < width(); j++) {
-                pixels[i][j] = new Pixel(j, i, picture.getRGB(j, i));
+                rgbs[i][j] = picture.getRGB(j, i);
+                // pixels[i][j] = new Pixel(j, i, picture.getRGB(j, i));
+                pixels[i][j] = new Pixel(j, i);
             }
         }
         for (int i = 0; i < height(); i++) {
@@ -49,6 +51,7 @@ public class Canvas {
     public void transpose() {
         energies = transpose(energies);
         pixels = transpose(pixels);
+        rgbs = transpose(rgbs);
         // picture = transpose(picture);
 
         // update dimension
@@ -74,7 +77,8 @@ public class Canvas {
         for (int i = 0; i < dRow; i++) {
             for (int j = 0; j < dCol; j++) {
                 // quite easy to make mistake
-                tM[j][i] = new Pixel(i, j, m[i][j].getRGB());
+                // tM[j][i] = new Pixel(i, j, m[i][j].getRGB());
+                tM[j][i] = new Pixel(i, j);
             }
         }
         return tM;
@@ -84,6 +88,18 @@ public class Canvas {
         int dRow = m.length;
         int dCol = m[0].length;
         double[][] tM = new double[dCol][dRow];
+        for (int i = 0; i < dRow; i++) {
+            for (int j = 0; j < dCol; j++) {
+                tM[j][i] = m[i][j];
+            }
+        }
+        return tM;
+    }
+
+    private int[][] transpose(int[][] m) {
+        int dRow = m.length;
+        int dCol = m[0].length;
+        int[][] tM = new int[dCol][dRow];
         for (int i = 0; i < dRow; i++) {
             for (int j = 0; j < dCol; j++) {
                 tM[j][i] = m[i][j];
@@ -117,7 +133,7 @@ public class Canvas {
      */
     public int[] findVerticalSeam() {
         double minEng = Double.POSITIVE_INFINITY;
-        Iterable<Pixel> path = new Stack<Pixel>();
+        Iterable<Integer> path = new Stack<Integer>();
         int[] returnPath = new int[height()];
         int beginRow = 0;
         int endRow = height() - 1;
@@ -132,8 +148,8 @@ public class Canvas {
             }
         }
         int row = 0;
-        for (Pixel p : path) {
-            returnPath[row++] = p.getCol();
+        for (int col : path) {
+            returnPath[row++] = col;
         }
         return returnPath;
     }
@@ -146,10 +162,14 @@ public class Canvas {
      */
     public void removeVerticalSeam(int[] seam) {
         shiftEnergy(seam);
-        shiftPixel(seam);
-        updateEnergy(seam);
-        width--;
-        updateTopologicalOrder();
+        shiftRGB(seam);
+        // shiftPixel(seam);
+
+        width--; // must before update energy as it determines the border
+        if (width > 0) {
+            updateEnergy(seam);
+            updateTopologicalOrder();
+        }
     }
 
     private void shiftEnergy(int[] seam) {
@@ -160,16 +180,24 @@ public class Canvas {
         }
     }
 
-    private void shiftPixel(int[] seam) {
+    private void shiftRGB(int[] seam) {
         for (int i = 0; i < height(); i++) {
-            // shift pixels
-            for (int j = seam[i] + 1; j < width(); j++) {
-                pixels[i][j - 1].setRGB(pixels[i][j].getRGB());
-            }
-            // System.arraycopy(pixels[i], seam[i] + 1, pixels[i], seam[i],
-            //                  width() - seam[i] - 1);
+            // shift rgb
+            System.arraycopy(rgbs[i], seam[i] + 1, rgbs[i], seam[i],
+                             width() - seam[i] - 1);
         }
     }
+
+    // private void shiftPixel(int[] seam) {
+    //     for (int i = 0; i < height(); i++) {
+    //         // shift pixels
+    //         for (int j = seam[i] + 1; j < width(); j++) {
+    //             pixels[i][j - 1].setRGB(pixels[i][j].getRGB());
+    //         }
+    //         // System.arraycopy(pixels[i], seam[i] + 1, pixels[i], seam[i],
+    //         //                  width() - seam[i] - 1);
+    //     }
+    // }
 
 
     /**
@@ -177,7 +205,8 @@ public class Canvas {
      */
     public void updateEnergy(int[] seam) {
         for (int i = 0; i < height(); i++) {
-            energies[i][seam[i]] = calEnergy(seam[i], i);
+            if (seam[i] < width())
+                energies[i][seam[i]] = calEnergy(seam[i], i);
             if (seam[i] > 0)
                 energies[i][seam[i] - 1] = calEnergy(seam[i] - 1, i);
             // updateEnergy(seam[i] - 1, i);
@@ -203,11 +232,6 @@ public class Canvas {
         return height;
     }
 
-    // current picture
-    public Picture picture() {
-        return picture;
-    }
-
     // energy of pixel at column x and row y
     public double getEnergy(int x, int y) {
         return energies[y][x];
@@ -226,7 +250,8 @@ public class Canvas {
 
     // get the rgb at column x and row y
     public int getRGB(int x, int y) {
-        return pixels[y][x].getRGB();
+        // return pixels[y][x].getRGB();
+        return rgbs[y][x];
     }
 
     /**

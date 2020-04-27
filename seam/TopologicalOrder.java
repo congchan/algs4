@@ -10,18 +10,19 @@ import edu.princeton.cs.algs4.Stack;
 public class TopologicalOrder {
     private boolean[][] marked;       // marked[v] = has v been marked in dfs?
     // private int[][] pre;                 // pre[v]    = preorder  number of v
-    private int[][] post;                // post[v]   = postorder number of v
+    // private int[][] post;                // post[v]   = postorder number of v
     // private Queue<Pixel> preorder;   // vertices in preorder
     private Queue<Pixel> postorder;  // vertices in postorder
     // private int preCounter;            // counter for preorder numbering
-    private int postCounter;           // counter for postorder numbering
+    // private int postCounter;           // counter for postorder numbering
 
     public TopologicalOrder(Canvas canvas) {
         if (canvas == null) throw new IllegalArgumentException();
         int height = canvas.height();
         int width = canvas.width();
+        if (height == 0 || width == 0) throw new IllegalArgumentException();
         // pre = new int[height][width];
-        post = new int[height][width];
+        // post = new int[height][width];
         postorder = new Queue<Pixel>();
         // preorder = new Queue<Pixel>();
         marked = new boolean[height][width];
@@ -51,7 +52,7 @@ public class TopologicalOrder {
             }
         }
         postorder.enqueue(pixel);
-        post[y][x] = postCounter++;
+        // post[y][x] = postCounter++;
     }
 
     /**
@@ -76,15 +77,15 @@ public class TopologicalOrder {
     //     return pre[i][j];
     // }
 
-    /**
-     * Returns the postorder number of vertex {@code v}.
-     *
-     * @return the postorder number of vertex {@code v}
-     * @throws IllegalArgumentException unless {@code 0 <= v < V}
-     */
-    public int post(int i, int j) {
-        return post[i][j];
-    }
+    // /**
+    //  * Returns the postorder number of vertex {@code v}.
+    //  *
+    //  * @return the postorder number of vertex {@code v}
+    //  * @throws IllegalArgumentException unless {@code 0 <= v < V}
+    //  */
+    // public int post(int i, int j) {
+    //     return post[i][j];
+    // }
 
 
     public static void main(String[] args) {
