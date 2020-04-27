@@ -33,10 +33,11 @@ public class TopologicalOrder {
         // reversePostOrder = new Stack<Pixel>();
         // preorder = new Queue<Pixel>();
         marked = new boolean[height][width];
-        // run dfs from top row
-        int row = 0;
-        for (int col = 0; col < canvas.width(); col++)
-            if (!marked[row][col]) dfs(col, row);
+        // run dfs from top row (which are considered as one pixel)
+        dfs(0, 0);
+        // int row = 0;
+        // for (int col = 0; col < canvas.width(); col++)
+        //     if (!marked[row][col]) dfs(col, row);
 
     }
 

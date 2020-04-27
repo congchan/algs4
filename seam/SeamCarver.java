@@ -126,7 +126,7 @@ public class SeamCarver {
                         "seam index must be between 0 and " + validRange + ": " + seam[i]);
             if (i < seam.length - 1 && Math.abs(seam[i] - seam[i + 1]) > 1)
                 throw new IllegalArgumentException(
-                        "seam diff must <= 1 and " + seam[i] + ": " + seam[i + 1]);
+                        "seam diff must <= 1 but: (" + seam[i] + ": " + seam[i + 1] + ")");
         }
     }
 

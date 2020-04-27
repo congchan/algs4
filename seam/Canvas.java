@@ -3,11 +3,11 @@
  *  Date:
  *  Description: a picture with pixels forming a doward DAG, with edges from
  *      pixel (x, y) to pixels (x − 1, y + 1), (x, y + 1), and (x + 1, y + 1)
+ *      There is special cases, see adj() for describestion.
  **************************************************************************** */
 
 import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.Queue;
-import edu.princeton.cs.algs4.Stack;
 
 public class Canvas {
     // define the energy of a pixel at the border of the image to be 1000
@@ -17,7 +17,6 @@ public class Canvas {
     private boolean isTransposed;
     private double[][] energies;
     private int[][] rgbs;
-    // private Iterable<Pixel> topological;
 
     public Canvas(Picture picture) {
         height = picture.height();
@@ -112,27 +111,36 @@ public class Canvas {
      * are (3, 0), (4, 1), (3, 2), (2, 3), and (2, 4).
      */
     public int[] findVerticalSeam() {
-        double minEng = Double.POSITIVE_INFINITY;
-        Iterable<Integer> path = new Stack<Integer>();
+        // double minEng = Double.POSITIVE_INFINITY;
+        // Iterable<Integer> path = new Stack<Integer>();
         int[] returnPath = new int[height()];
+        int beginCol = 0;
         int beginRow = 0;
+        int endCol = 0;
         int endRow = height() - 1;
         TopologicalOrder tp = new TopologicalOrder(this);
-        // AcyclicSP asp;
-        for (int beginCol = 1; beginCol < width() - 1; beginCol++) {
-            tp.buildSingleSourceSP(beginCol, beginRow);
-            // AcyclicSP asp = new AcyclicSP(this, beginCol, beginRow);
-            for (int endCol = 1; endCol < width() - 1; endCol++) {
-                double candEng = tp.distTo(endCol, endRow);
-                if (candEng < minEng) {
-                    minEng = candEng;
-                    path = tp.pathTo(endCol, endRow);
-                }
-            }
-        }
+        tp.buildSingleSourceSP(beginCol, beginRow);
+        // double minEng = tp.distTo(0, endRow);
+        Iterable<Integer> path = tp.pathTo(endCol, endRow);
+        // for (int beginCol = 1; beginCol < width() - 1; beginCol++) {
+        //     tp.buildSingleSourceSP(beginCol, beginRow);
+        //     // AcyclicSP asp = new AcyclicSP(this, beginCol, beginRow);
+        //     for (int endCol = 1; endCol < width() - 1; endCol++) {
+        //         double candEng = tp.distTo(endCol, endRow);
+        //         if (candEng < minEng) {
+        //             minEng = candEng;
+        //             path = tp.pathTo(endCol, endRow);
+        //         }
+        //     }
+        // }
         int row = 0;
         for (int col : path) {
             returnPath[row++] = col;
+        }
+        // retify the path head and tail
+        if (returnPath.length > 2) {
+            returnPath[0] = returnPath[1];
+            returnPath[returnPath.length - 1] = returnPath[returnPath.length - 2];
         }
         return returnPath;
     }
@@ -195,6 +203,7 @@ public class Canvas {
         return height;
     }
 
+
     // energy of pixel at column x and row y
     public double getEnergy(int x, int y) {
         return energies[y][x];
@@ -209,8 +218,13 @@ public class Canvas {
     /**
      * get the adjacent pixels of pixel at column x and row y
      * which are pixels (x − 1, y + 1), (x, y + 1), and (x + 1, y + 1)
-     * Special cases: consider the border pixels energy is fixed,
+     * Special cases:
+     * 1. consider the border pixels energy is fixed,
      * relatve adj have only one pixel, which is the one exact below, (x, y + 1)
+     * 2. The upper borders pixels as a whole are considered as one pixel (0, 0)
+     * and could reach any pixels right next to them.
+     * 3. The lower borders pixels as a whole are considered as one pixel (height - 1, 0)
+     * and could be reached by any pixels right next to them.
      *
      * @param x column x
      * @param y row y
@@ -221,8 +235,16 @@ public class Canvas {
         validateRowIndex(y);
         Queue<Pixel> adjPixels = new Queue<Pixel>();
         if (isValidRowIndex(y + 1)) {
-            if (isBorder(x, y) || isBorder(x, y + 1)) {
-                // special cases
+            if (y == 0) { // upper border
+                for (int i = 0; i < width(); i++) {
+                    if (isValidColumnIndex(i))
+                        adjPixels.enqueue(new Pixel(i, y + 1));
+                }
+            }
+            else if (y + 1 == height() - 1) { // next to lower border
+                adjPixels.enqueue(new Pixel(0, height() - 1));
+            }
+            else if (isBorder(x, y)) { // side borders
                 adjPixels.enqueue(new Pixel(x, y + 1));
             }
             else {
